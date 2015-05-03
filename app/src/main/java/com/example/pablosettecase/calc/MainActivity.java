@@ -1,5 +1,7 @@
 package com.example.pablosettecase.calc;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,13 +17,15 @@ import android.widget.EditText;
 
 public class MainActivity extends ActionBarActivity {
     private EditText input;
-    private float num1 = 0;
-    private float num2 = 0;
+    private float numOne = 0;
+    private float numTwo = 0;
     boolean argTwoSet = false;
+    boolean argOneSet = false;
+    private boolean power;
+    private double powA;
     private String operation;
     private String currentInput;
     private ButtonClickListener btnClick = new ButtonClickListener();
-    private int num2Index= 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,12 @@ public class MainActivity extends ActionBarActivity {
         // get the input from the other intent if there is one
         Intent intent = getIntent();
         currentInput = intent.getStringExtra("currentInput");
+        numOne = intent.getFloatExtra("numOne", 0);
+        numTwo = intent.getFloatExtra("numTwo", 0);
+        argOneSet = intent.getBooleanExtra("argOneSet", false);
+        argTwoSet = intent.getBooleanExtra("argTwoSet", false);
+        power = intent.getBooleanExtra("power", false);
+        powA = intent.getDoubleExtra("powA", -1);
 
         // set the input text
         input = (EditText) findViewById(R.id.input);
@@ -93,15 +103,27 @@ public class MainActivity extends ActionBarActivity {
 
         switch(id) {
             case R.id.action_keyboard:
-            switchKeyboard();
+                switchKeyboard();
+                break;
+            case R.id.action_author:
+                alertAuthor();
+                break;
         }
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_keyboard) {
-            return true;
-        }
-
+        
         return super.onOptionsItemSelected(item);
+    }
+
+    public void alertAuthor() {
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Assignment 1");
+        alertDialog.setMessage("Author: Pablo Settecase\nCS454 Mark Sargent\n5-3-2015");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
     }
 
     public static void disableSoftInputFromAppearing(EditText editText) {
@@ -115,13 +137,22 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void switchKeyboard(){
+
         Intent intent = new Intent(MainActivity.this, Calc2.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra("currentInput", input.getText().toString());
+        intent.putExtra("numOne", numOne);
+        intent.putExtra("numTwo", numTwo);
+        intent.putExtra("argOneSet",argOneSet);
+        intent.putExtra("argTwo",argTwoSet);
+        intent.putExtra("power", power);
+        intent.putExtra("powA", powA);
+
         startActivity(intent);
     }
 
     public void operation(String op){
+
         // get everything in the input field
         String s = input.getText().toString();
         String current = s;
@@ -134,53 +165,86 @@ public class MainActivity extends ActionBarActivity {
         // check if we should compute something or not
         if(operation.length() > 0) {
             // there has already been a previous operation entered, compute it first
-            num2 = Float.parseFloat(s.substring(num2Index));    // the second arg starts at num2Index
-            Log.i("previous op detected", String.valueOf(num2));
+            numTwo = Float.parseFloat(s);
+            argTwoSet = true;
+            Log.i("previous op detected: ", String.valueOf(numTwo));
             compute();
         } else {
-            // this is the first operation on a number, set the proper variables
-            num1  = Float.parseFloat(s);
-            operation = op;
-            num2Index = s.length()+1;
-            Log.i("computed num2Index: ", String.valueOf(num2Index));
+            // this is the first operation on a number
+            numOne = Float.parseFloat(s);
+            argOneSet = true;
+            input.setText("");
         }
-        //input.setText();
+        operation = op;
+    }
+
+    public void pow() {
+        // finish calculating a power if necessary
+        if(input.getText().toString().length() > 0) {
+            double b = Double.parseDouble(input.getText().toString());
+            Log.i("pow ", " . . pow . .");
+            Log.i("a: ", String.valueOf(powA));
+            Log.i("b: ", String.valueOf(b));
+
+            try {
+                double p = Math.pow(powA,b);
+                input.setText(String.valueOf(format(p)));
+            } catch(Exception e) {
+                input.setText("error pow");
+            }
+        }
     }
 
     public void compute() {
         float result = 0;
         // compute
-        Log.i("num1: ", String.valueOf(num1));
-        Log.i("num2: ", String.valueOf(num2));
+        Log.i("numOne: ", String.valueOf(numOne));
+        Log.i("numTwo: ", String.valueOf(numTwo));
+
         switch(operation) {
             case "/":
-                result = num1/num2;
+                try{
+                    result = numOne / numTwo;
+                } catch(Exception e) {
+                    input.setText("error");
+                }
                 Log.i("dividing: ", String.valueOf(result));
                 break;
             case "*":
-                result = num1*num2;
+                try{
+                    result = numOne * numTwo;
+                } catch(Exception e) {
+                    input.setText("error");
+                }
                 Log.i("multiplying: ", String.valueOf(result));
                 break;
             case "-":
-                result = num1-num2;
+                try{
+                    result = numOne - numTwo;
+                } catch(Exception e) {
+                    input.setText("error");
+                }
                 Log.i("subtracting: ", String.valueOf(result));
                 break;
             case "+":
-                result = num1+num2;
+                try{
+                    result = numOne + numTwo;
+                } catch(Exception e) {
+                    input.setText("error");
+                }
                 Log.i("adding: ", String.valueOf(result));
                 break;
         }
 
-        // set the text and num1 to the result
+        // set the text and numOne to the result
         // format the result first
         input.setText(format(result));
-        num1 = result;
-        // set operation to empty string
-        operation = "";
+        numOne = result;
         // unset the second argument
         argTwoSet = false;
-        // unset the second argument index
-        num2Index = 0;
+        power = false;
+        powA = -1;
+        operation = "";
     }
 
     public void addInput(String n){
@@ -191,18 +255,28 @@ public class MainActivity extends ActionBarActivity {
         input.setText(current);
     }
 
+    public void clear() {
+        input.setText("");
+        numOne = 0;
+        numTwo = 0;
+        operation = "";
+        argOneSet = false;
+        argTwoSet = false;
+    }
+
     private class ButtonClickListener implements View.OnClickListener{
 
         public void onClick(View v) {
 
             int vId = ((Button)v).getId();
             Log.i("View Id: ", String.valueOf(vId));
+
             switch (vId) {
                 case R.id.btnSwitch:
                     switchKeyboard();
                     break;
                 case R.id.btnClear:
-                    input.setText("");
+                    clear();
                     break;
 //                case R.id.btnPeriod:
 //                TODO: for now I assume the user uses period/decimal correctly
@@ -234,16 +308,16 @@ public class MainActivity extends ActionBarActivity {
                 case R.id.btnEq:
                     // only compute if the second argument has been set
                     Log.i("btnEq pressed: ", String.valueOf(vId));
-                    String s = input.getText().toString();
-                    num2 = Float.parseFloat(s.substring(num2Index));    // the second arg starts at num2Index
-                    compute();
+                    if(argOneSet) {
+                        numTwo = Float.parseFloat(input.getText().toString());    // the second arg starts at num2Index
+                        compute();
+                    } else if(power) {
+                        pow();
+                    }
                     break;
                 default:
                     String in = ((Button)v).getText().toString();
                     addInput(in);
-                    if(operation.length() > 0){
-                        argTwoSet = true;
-                    }
                     break;
             }
         }

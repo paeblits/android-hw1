@@ -5,6 +5,10 @@
     tools:context=".MainActivity">
 
     <item
+        android:id="@+id/action_author"
+        android:title="By paeblits"
+            />
+    <item
         android:id="@+id/action_keyboard"
         android:icon="@drawable/action_2nd"
         android:title="@string/action_keyboard"

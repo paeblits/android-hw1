@@ -1,5 +1,7 @@
 package com.example.pablosettecase.calc;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -15,13 +17,15 @@ import android.widget.EditText;
 
 public class Calc2 extends ActionBarActivity {
     private EditText input;
-    private float num1 = 0;
-    private float num2 = 0;
+    private double numOne = 0;
+    private double numTwo = 0;
+    boolean argOneSet = false;
     boolean argTwoSet = false;
+    private boolean power;
+    private double powA;
     private String operation;
     private String currentInput;
     private ButtonClickListener btnClick = new ButtonClickListener();
-    private int num2Index= 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +37,12 @@ public class Calc2 extends ActionBarActivity {
         // get the input from the other intent if there is one
         Intent intent = getIntent();
         currentInput = intent.getStringExtra("currentInput");
+        numOne = intent.getFloatExtra("numOne", 0);
+        numTwo = intent.getFloatExtra("numTwo", 0);
+        argOneSet = intent.getBooleanExtra("argOneSet", false);
+        argTwoSet = intent.getBooleanExtra("argTwoSet", false);
+        power = intent.getBooleanExtra("power", false);
+        powA = intent.getDoubleExtra("powA", -1);
 
         // set the input text
         input = (EditText) findViewById(R.id.input);
@@ -40,10 +50,10 @@ public class Calc2 extends ActionBarActivity {
         disableSoftInputFromAppearing(input);
 
         // every button needs a listener
-        int btnIds[] = {R.id.btnClear,R.id.btnSwitch,R.id.btnDel,R.id.btn1,R.id.btn2,R.id.btn3,R.id.btnDiv,
-                R.id.btn4,R.id.btn5,R.id.btn6,R.id.btnMult,
-                R.id.btn7,R.id.btn8,R.id.btn9,R.id.btnMinus,
-                R.id.btnPeriod,R.id.btn0,R.id.btnEq,R.id.btnPlus
+        int btnIds[] = {R.id.btnClear,R.id.btnSwitch,R.id.btnDel,R.id.btnSin,R.id.btnCos,R.id.btnTan,
+                R.id.btnLn,R.id.btnLog,R.id.btnPi,R.id.btnE,
+                R.id.btnPercent,R.id.btnFact,R.id.btnSqrt,R.id.btnPow,
+                R.id.btnOpenParen,R.id.btnCloseParen
         };
 
 //  * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -70,9 +80,6 @@ public class Calc2 extends ActionBarActivity {
         ((Button) findViewById(btnIds[13])).setOnClickListener(btnClick);
         ((Button) findViewById(btnIds[14])).setOnClickListener(btnClick);
         ((Button) findViewById(btnIds[15])).setOnClickListener(btnClick);
-        ((Button) findViewById(btnIds[16])).setOnClickListener(btnClick);
-        ((Button) findViewById(btnIds[17])).setOnClickListener(btnClick);
-        ((Button) findViewById(btnIds[18])).setOnClickListener(btnClick);
 
     }
 
@@ -93,15 +100,27 @@ public class Calc2 extends ActionBarActivity {
 
         switch(id) {
             case R.id.action_keyboard:
-            switchKeyboard();
-        }
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_keyboard) {
-            return true;
+                switchKeyboard();
+                break;
+            case R.id.action_author:
+                alertAuthor();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void alertAuthor() {
+        AlertDialog alertDialog = new AlertDialog.Builder(Calc2.this).create();
+        alertDialog.setTitle("Assignment 1");
+        alertDialog.setMessage("Author: Pablo Settecase\nCS454 Mark Sargent\n5-3-2015");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
     }
 
     public static void disableSoftInputFromAppearing(EditText editText) {
@@ -115,72 +134,120 @@ public class Calc2 extends ActionBarActivity {
     }
 
     public void switchKeyboard(){
+
         Intent intent = new Intent(Calc2.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra("currentInput", input.getText().toString());
+        intent.putExtra("numOne", numOne);
+        intent.putExtra("numTwo", numTwo);
+        intent.putExtra("argOneSet", argOneSet);
+        intent.putExtra("argTwo",argTwoSet);
+        intent.putExtra("power", power);
+        intent.putExtra("powA", powA);
+
         startActivity(intent);
     }
 
-    public void operation(String op){
-        // get everything in the input field
-        String s = input.getText().toString();
-        String current = s;
-        Log.i("operation: ", op);
-        current += op;
-        Log.i("current input: ", current);
-        // update the input field with the new symbol ("+", "-", etc.)
-        input.setText(current);
-
-        // check if we should compute something or not
-        if(operation.length() > 0) {
-            // there has already been a previous operation entered, compute it first
-            num2 = Float.parseFloat(s.substring(num2Index));    // the second arg starts at num2Index
-            Log.i("previous op detected", String.valueOf(num2));
-            compute();
-        } else {
-            // this is the first operation on a number, set the proper variables
-            num1  = Float.parseFloat(s);
-            operation = op;
-            num2Index = s.length()+1;
-            Log.i("computed num2Index: ", String.valueOf(num2Index));
-        }
-        //input.setText();
+    public void pow(){
+        powA = Double.parseDouble(input.getText().toString());
+        input.setText("");
+        power = true;
     }
 
-    public void compute() {
-        float result = 0;
+    public double fact(int n) {
+        double result = (double)n;
+        for(int i = n-1; i > 0; i-- ) {
+            result *= i;
+        }
+        return result;
+    }
+
+    public void compute(int command) {
+
+        double result = 0;
+        double temp = Double.parseDouble(input.getText().toString());
         // compute
-        Log.i("num1: ", String.valueOf(num1));
-        Log.i("num2: ", String.valueOf(num2));
-        switch(operation) {
-            case "/":
-                result = num1/num2;
-                Log.i("dividing: ", String.valueOf(result));
+        Log.i("temp: ", String.valueOf(temp));
+        Log.i("numOne: ", String.valueOf(numOne));
+        Log.i("numTwo: ", String.valueOf(numTwo));
+        switch(command) {
+            case 0:
+                try{
+                    result = Math.sin(temp);
+                } catch(Exception e) {
+                    input.setText("error");
+                }
+                Log.i("sin: ", String.valueOf(result));
                 break;
-            case "*":
-                result = num1*num2;
-                Log.i("multiplying: ", String.valueOf(result));
+            case 1:
+                try{
+                    result = Math.cos(temp);
+                } catch(Exception e) {
+                    input.setText("error");
+                }
+                Log.i("cos: ", String.valueOf(result));
                 break;
-            case "-":
-                result = num1-num2;
-                Log.i("subtracting: ", String.valueOf(result));
+            case 2:
+                try{
+                    result = Math.tan(temp);
+                } catch(Exception e) {
+                    input.setText("error");
+                }
+                Log.i("tangent: ", String.valueOf(result));
                 break;
-            case "+":
-                result = num1+num2;
-                Log.i("adding: ", String.valueOf(result));
+            case 3:
+                try{
+                    result = Math.log(temp);
+                } catch(Exception e) {
+                    input.setText("error");
+                }
+                Log.i("nat log: ", String.valueOf(result));
+                break;
+            case 4:
+                try{
+                    result = Math.log10(temp);
+                } catch(Exception e) {
+                    input.setText("error");
+                }
+                Log.i("log base 10: ", String.valueOf(result));
+                break;
+            case 5:         // PERCENT
+                if(temp < 1) {
+                    result = temp*10;
+                }
+                break;
+            case 6:         // FACTORIAL
+                if(temp > 2) {
+                    result = fact((int)temp);
+                } else {
+                    result = temp;
+                }
+                break;
+            case 7:         // SQRT
+                if(temp > 0) {
+                    try{
+                        result = Math.sqrt(temp);
+                    } catch (Exception e) {
+                        input.setText("error");
+                    }
+                }
                 break;
         }
 
-        // set the text and num1 to the result
         // format the result first
         input.setText(format(result));
-        num1 = result;
+
+        if(argOneSet) {
+            numTwo = result;
+            //argTwoSet = true;
+        }
+
+        numOne = result;
         // set operation to empty string
         operation = "";
         // unset the second argument
         argTwoSet = false;
         // unset the second argument index
-        num2Index = 0;
     }
 
     public void addInput(String n){
@@ -189,6 +256,15 @@ public class Calc2 extends ActionBarActivity {
         current += n;
 
         input.setText(current);
+    }
+
+    public void clear() {
+        input.setText("");
+        numOne = 0;
+        numTwo = 0;
+        operation = "";
+        argOneSet = false;
+        argTwoSet = false;
     }
 
     private class ButtonClickListener implements View.OnClickListener{
@@ -215,30 +291,59 @@ public class Calc2 extends ActionBarActivity {
                         input.setText(s);
                     }
                     break;
-                case R.id.btnDiv:       // divide
-                    Log.i("btnDiv pressed: ", String.valueOf(vId));
-                    operation("/");
+                case R.id.btnSin:
+                    Log.i("btnSin pressed: ", String.valueOf(vId));
+                    compute(0);
                     break;
-                case R.id.btnMult:
-                    Log.i("btnMult pressed: ", String.valueOf(vId));
-                    operation("*");
+                case R.id.btnCos:
+                    Log.i("btnCos pressed: ", String.valueOf(vId));
+                    compute(1);
                     break;
-                case R.id.btnMinus:
-                    Log.i("btnMinus pressed: ", String.valueOf(vId));
-                    operation("-");
+                case R.id.btnTan:
+                    Log.i("btnTan pressed: ", String.valueOf(vId));
+                    compute(2);
                     break;
-                case R.id.btnPlus:
-                    Log.i("btnPlus pressed: ", String.valueOf(vId));
-                    operation("+");
+                case R.id.btnLn:
+                    Log.i("btnLn pressed: ", String.valueOf(vId));
+                    compute(3);
                     break;
-                case R.id.btnEq:
-                    // only compute if the second argument has been set
-                    Log.i("btnEq pressed: ", String.valueOf(vId));
-                    String s = input.getText().toString();
-                    num2 = Float.parseFloat(s.substring(num2Index));    // the second arg starts at num2Index
-                    compute();
+                case R.id.btnLog:
+                    Log.i("btnLog pressed: ", String.valueOf(vId));
+                    compute(4);
+                    break;
+                case R.id.btnPi:
+                    Log.i("btnPi pressed: ", String.valueOf(vId));
+                    input.setText(String.valueOf(Math.PI));
+                    break;
+                case R.id.btnE:
+                    Log.i("btnLn pressed: ", String.valueOf(vId));
+                    input.setText(String.valueOf(Math.E));
+                    break;
+                case R.id.btnPercent:
+                    Log.i("btnPercent pressed: ", String.valueOf(vId));
+                    compute(5);
+                    break;
+                case R.id.btnFact:
+                    Log.i("btnFact pressed: ", String.valueOf(vId));
+                    compute(6);
+                    break;
+                case R.id.btnSqrt:
+                    Log.i("btnSqrt pressed: ", String.valueOf(vId));
+                    compute(7);
+                    break;
+                case R.id.btnPow:
+                    Log.i("btnPow pressed: ", String.valueOf(vId));
+                    if(input.getText().toString().length() >= 0) {
+                        pow();
+                    }
+                    break;
+                // did not finish parenthesis
+                case R.id.btnOpenParen:
+                    break;
+                case R.id.btnCloseParen:
                     break;
                 default:
+                    input.setText("");
                     String in = ((Button)v).getText().toString();
                     addInput(in);
                     if(operation.length() > 0){
