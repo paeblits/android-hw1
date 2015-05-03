@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context=".MainActivity"
-    android:id="@+id/rel">
+    tools:context=".Calc2"
+    android:id="@+id/rel2">
 
     <EditText
         android:layout_width="match_parent"
@@ -43,8 +43,8 @@
             android:layout_gravity="center_horizontal"
             android:layout_row="0"
             android:layout_column="0"
-            android:background="#fffff255"
-            android:textColor="#444" />
+            android:background="#ff5b79ff"
+            android:textColor="#ddd" />
 
         <Button
             android:layout_width="wrap_content"

@@ -13,7 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 
-public class MainActivity extends ActionBarActivity {
+public class Calc2 extends ActionBarActivity {
     private EditText input;
     private float num1 = 0;
     private float num2 = 0;
@@ -26,7 +26,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.calc2);
         operation = "";
         currentInput = "";
 
@@ -115,7 +115,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void switchKeyboard(){
-        Intent intent = new Intent(MainActivity.this, Calc2.class);
+        Intent intent = new Intent(Calc2.this, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra("currentInput", input.getText().toString());
         startActivity(intent);
